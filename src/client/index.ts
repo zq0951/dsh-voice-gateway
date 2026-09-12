@@ -32,12 +32,12 @@ const NS = 'voice'
 export const inject = ['slots', 'sessions', 'locale']
 
 export function apply(ctx: ClientContext): void {
-  ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-voice: dictionaries')
+  ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'voice-gateway: dictionaries')
 
   const voiceManager = createVoiceManager(ctx)
   ctx.effect(() => () => {
     voiceManager.dispose()
-  }, 'ui-voice: voiceManager lifecycle')
+  }, 'voice-gateway: voiceManager lifecycle')
 
   ctx.slots.inject('conversation.input.right', () => ctx.slots.register({
     name: 'conversation.input.right',

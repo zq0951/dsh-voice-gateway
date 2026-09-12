@@ -8,35 +8,6 @@ declare module '@deepseek-ai/dsh-session/types' {
   export type SessionId = string & { readonly __brand?: 'SessionId' }
 }
 
-declare module '@deepseek-ai/dsh-client-ui-slots' {
-  export interface HostObservable<T> {
-    subscribe(listener: () => void): () => void
-    getSnapshot(): T
-  }
-
-  export interface LocaleNamespaceMap {}
-
-  export type PropsRuntime<S extends string = string> = {
-    readonly slotName?: S
-    [key: string]: unknown
-  }
-
-  export type PropsLocale<N extends keyof LocaleNamespaceMap & string> = {
-    t: (key: LocaleNamespaceMap[N] & string, args?: Record<string, string | number>) => string
-  }
-
-  export type PropsHooks<HS extends Record<string, HostObservable<any>>> = {
-    [N in keyof HS & string as `use${Capitalize<N>}`]: <Selected = HS[N] extends HostObservable<infer T> ? T : never>(
-      selector: (snapshot: HS[N] extends HostObservable<infer T> ? T : never) => Selected,
-    ) => Selected
-  }
-
-  export type InjectFace<I extends object> =
-    I extends { hooks: infer HS extends Record<string, HostObservable<any>> }
-      ? Omit<I, 'hooks'> & PropsHooks<HS>
-      : I
-}
-
 declare module '@deepseek-ai/dsh-client-locale/client' {
   import type { Context } from '@deepseek-ai/cordis'
 

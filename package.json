@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "license": "MIT",
-  "author": "xp1024 <zq0951>",
+  "author": "xp1024 (https://github.com/zq0951)",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/zq0951/dsh-voice-gateway.git"
@@ -47,9 +47,10 @@
     }
   },
   "scripts": {
-    "build": "tsdown && tsc",
+    "build": "tsdown && tsc && node scripts/verify-build.mjs",
     "bundle": "tsdown",
-    "prepublishOnly": "tsdown && tsc",
+    "test": "node scripts/verify-build.mjs",
+    "prepublishOnly": "tsdown && tsc && node scripts/verify-build.mjs",
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {

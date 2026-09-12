@@ -1,4 +1,3 @@
-/// <reference path="../types/dsh-ambient.d.ts" />
 import type { VoiceKey } from './locales.ts'
 import type { VoiceSnapshot } from './voice-service.ts'
 
@@ -26,13 +25,6 @@ export type InjectFace<I extends object> =
   I extends { hooks: infer HS extends Record<string, HostObservable<any>> }
     ? Omit<I, 'hooks'> & PropsHooks<HS>
     : I
-
-declare module '@deepseek-ai/dsh-client-ui-slots' {
-  interface LocaleNamespaceMap {
-    /** Voice interaction plugin copy. */
-    voice: VoiceKey
-  }
-}
 
 export type VoiceGatewayState = 'idle' | 'listening' | 'thinking' | 'generating' | 'speaking' | 'disconnected'
 

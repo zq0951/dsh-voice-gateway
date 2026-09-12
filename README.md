@@ -1,5 +1,5 @@
 ---
-description: "Voice Gateway client surface plugin for the DSH web client: mic status indicator, six-state machine, voiceprint enrollment, and auto-speak controls."
+description: "Voice Gateway client surface plugin for the DSH web client: mic status indicator, six-state machine (idle, listening, thinking, generating, speaking, disconnected), voiceprint enrollment, and auto-speak controls."
 kind: "package-reference"
 ---
 
@@ -21,7 +21,7 @@ DeepSeek Harness (DSH) 物理语音交互网关客户端插件 (Client Surface P
 
 ```bash
 # 克隆并启动本地语音网关
-git clone git@github.com:zq0951/local-voice-gateway.git
+git clone https://github.com/zq0951/local-voice-gateway.git
 cd local-voice-gateway
 ./start.sh
 # 网关默认监听 http://127.0.0.1:8765 与 ws://127.0.0.1:8765/v1/events
@@ -41,7 +41,7 @@ dsh plugin --profile web add /path/to/dsh-voice-gateway
 
 ### 3. 启动 DSH Web 界面
 ```bash
-dsh web --port 3080
+dsh web --no-open --port 3080
 ```
 启动后在浏览器打开 DSH，对话输入栏右侧将渲染麦克风控制按钮。
 
@@ -50,12 +50,12 @@ dsh web --port 3080
 ## 功能特性 (Features)
 
 - **六态实时状态指示器 (Six-State Machine Indicator)**：
+  - `idle`：空闲就绪，麦克风处于待命状态。
+  - `listening`：正在被动侦听有效声纹或等待唤醒。
+  - `thinking`：智能体（Agent）正在思考与生成回复。
+  - `generating`：大模型回复中，正在合成语音流。
+  - `speaking`：扬声器正在播报回复音频。
   - `disconnected`：未连接到语音网关守护进程。
-  - `connecting`：正在建立 WebSocket 连接。
-  - `idle`：网关就绪，麦克风处于待命状态。
-  - `recording`：检测到有效人声输入并正在采音录制。
-  - `processing`：ASR 语音转文字与声纹匹配计算中。
-  - `generating`：大模型生成回复中，语音网关处于合成与播报准备态。
 - **声纹过滤与多发言人管理 (Voiceprint Enrollment & Filtering)**：
   - 内置向导式声纹录制弹窗，引导用户录制固定发音语料并注册声纹特征。
   - 支持多用户声纹列表管理，主动过滤未授权发言人语音，杜绝环境杂音或旁人误唤醒。
@@ -80,7 +80,7 @@ dsh web --port 3080
 ## Use this package
 
 The voice control button is mounted into the conversation input bar:
-- **Six-state indicator**: Reflects `disconnected`, `connecting`, `idle`, `recording`, `processing`, and `generating` gateway states.
+- **Six-state indicator**: Reflects `idle`, `listening`, `thinking`, `generating`, `speaking`, and `disconnected` gateway states.
 - **Trigger mode toggle**: Switch between passive voiceprint recognition, wake word only, and hybrid mode.
 - **Auto-speak toggle**: Enable or disable automatic text-to-speech for assistant responses.
 - **Voiceprint enrollment**: Open the guided wizard to record speaker samples and manage saved profiles.
