@@ -1,0 +1,3 @@
+- insert:
+    - id: ui-voice
+      name: '@xp1024/dsh-voice-gateway'

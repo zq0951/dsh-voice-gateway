@@ -1,0 +1,77 @@
+{
+  "name": "@xp1024/dsh-voice-gateway",
+  "description": "Voice Gateway client surface for DeepSeek Harness: mic status, voiceprint filtering, and auto-speak",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "author": "xp1024 <zq0951>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zq0951/dsh-voice-gateway.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zq0951/dsh-voice-gateway/issues"
+  },
+  "homepage": "https://github.com/zq0951/dsh-voice-gateway#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-api-remotes",
+        "@deepseek-ai/dsh-api-session-controller",
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-renderer",
+        "@deepseek-ai/dsh-client-ui-session"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "build": "tsdown && tsc",
+    "bundle": "tsdown",
+    "prepublishOnly": "tsdown && tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.2"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "^4.0.2",
+    "@types/node": "^22.10.0",
+    "@types/react": "^18.3.0",
+    "lightningcss": "^1.29.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tsdown": "^0.22.2",
+    "typescript": "^5.7.0"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "lib/client.js.map",
+    "lib/types/**/*.d.ts",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ]
+}

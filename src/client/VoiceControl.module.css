@@ -1,0 +1,458 @@
+/* Voice control button and popover menu (DSH native design tokens) */
+
+.voiceContainer {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+
+/* Button size 28px × 28px, strictly matching adjacent ModelSelect and toolbar */
+.voiceButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 14px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  cursor: pointer;
+  position: relative;
+  transition: background-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
+  padding: 0;
+}
+
+.voiceButton:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.micIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+}
+
+/* State: idle */
+.stateIdle {
+  color: var(--dsw-alias-label-secondary);
+}
+
+/* State: listening */
+.stateListening {
+  color: var(--dsw-alias-state-success-primary);
+  background: var(--dsw-alias-interactive-bg-hover);
+  box-shadow: 0 0 0 1px var(--dsw-alias-state-success-primary);
+  animation: listeningPulse 2s infinite ease-in-out;
+}
+
+/* State: thinking */
+.stateThinking {
+  color: var(--dsw-alias-state-warn-label);
+  background: var(--dsw-alias-interactive-bg-hover);
+  box-shadow: 0 0 0 1px var(--dsw-alias-state-warn-label);
+  animation: thinkingPulse 1.6s infinite ease-in-out;
+}
+
+/* State: generating (TTS synthesis in progress) */
+.stateGenerating {
+  color: var(--dsw-alias-state-brand-primary);
+  background: var(--dsw-alias-interactive-bg-hover);
+  box-shadow: 0 0 0 1px var(--dsw-alias-state-brand-primary);
+  animation: generatingPulse 1.5s infinite ease-in-out;
+}
+
+/* State: speaking */
+.stateSpeaking {
+  color: var(--dsw-alias-state-business-primary);
+  background: var(--dsw-alias-interactive-bg-hover);
+  box-shadow: 0 0 0 1px var(--dsw-alias-state-business-primary);
+  animation: speakingPulse 1.4s infinite ease-in-out;
+}
+
+/* State: disconnected */
+.stateDisconnected {
+  color: var(--dsw-alias-label-dimmed);
+  opacity: 0.5;
+}
+
+/* Status badge dot (top-right of mic icon) */
+.statusBadge {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  corner-shape: round;
+  pointer-events: none;
+}
+
+.badgeListening {
+  background: var(--dsw-alias-state-success-primary);
+  box-shadow: 0 0 4px var(--dsw-alias-state-success-primary);
+}
+
+.badgeThinking {
+  background: var(--dsw-alias-state-warn-label);
+  box-shadow: 0 0 4px var(--dsw-alias-state-warn-label);
+}
+
+.badgeGenerating {
+  background: var(--dsw-alias-state-brand-primary);
+  box-shadow: 0 0 4px var(--dsw-alias-state-brand-primary);
+}
+
+.badgeSpeaking {
+  background: var(--dsw-alias-state-business-primary);
+  box-shadow: 0 0 4px var(--dsw-alias-state-business-primary);
+}
+
+/* Popover menu matching DSH native Menu / ModelSelect */
+.popoverMenu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  width: 284px;
+  background: var(--dsw-specific-menu);
+  --dsw-elevation-stroke-color: var(--dsw-alias-border-l1);
+  border-radius: 16px;
+  box-shadow: var(--dsw-elevation-prominent);
+  padding: 12px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--dsw-alias-label-primary);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: popIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.menuHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 26px;
+  padding: 1px 2px 5px 2px;
+}
+
+.statusIndicator {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: 1;
+  min-width: 0;
+}
+
+.statusDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  corner-shape: round;
+  background: var(--dsw-alias-label-dimmed);
+  flex-shrink: 0;
+}
+
+.statusIndicator.stateIdle .statusDot {
+  background: var(--dsw-alias-label-secondary);
+}
+
+.statusIndicator.stateListening .statusDot {
+  background: var(--dsw-alias-state-success-primary);
+  box-shadow: 0 0 6px var(--dsw-alias-state-success-primary);
+}
+
+.statusIndicator.stateThinking .statusDot,
+.dotThinking {
+  background: var(--dsw-alias-state-warn-label);
+  box-shadow: 0 0 6px var(--dsw-alias-state-warn-label);
+}
+
+.statusIndicator.stateGenerating .statusDot,
+.dotGenerating {
+  background: var(--dsw-alias-state-brand-primary);
+  box-shadow: 0 0 6px var(--dsw-alias-state-brand-primary);
+}
+
+.statusIndicator.stateSpeaking .statusDot,
+.dotSpeaking {
+  background: var(--dsw-alias-state-business-primary);
+  box-shadow: 0 0 6px var(--dsw-alias-state-business-primary);
+}
+
+.statusIndicator.stateDisconnected .statusDot {
+  background: var(--dsw-alias-label-dimmed);
+}
+
+.statusText {
+  color: var(--dsw-alias-label-primary);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menuDivider {
+  height: 0.5px;
+  background: var(--dsw-alias-border-l1);
+  margin: 2px 0;
+}
+
+.stopSpeakingBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--dsw-alias-state-error-primary);
+  background: color-mix(in srgb, var(--dsw-alias-state-error-primary) 12%, transparent);
+  border: 0.5px solid color-mix(in srgb, var(--dsw-alias-state-error-primary) 35%, transparent);
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.stopSpeakingBtn:hover {
+  background: var(--dsw-alias-state-error-primary);
+  border-color: var(--dsw-alias-state-error-primary);
+  color: var(--dsw-alias-label-primary-foreground);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--dsw-alias-state-error-primary) 35%, transparent);
+}
+
+.stopSpeakingBtn:active {
+  transform: scale(0.96);
+}
+
+.stopIcon {
+  width: 7px;
+  height: 7px;
+  background: currentColor;
+  border-radius: 1.5px;
+  flex-shrink: 0;
+}
+
+.menuSection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sectionTitle {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--dsw-alias-label-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 0 4px;
+}
+
+.modeOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.modeItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--dsw-alias-label-secondary);
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.modeItem:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.modeItem.active {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-state-business-primary);
+  font-weight: 500;
+}
+
+.radio {
+  accent-color: var(--dsw-alias-state-business-primary);
+  cursor: pointer;
+  margin: 0;
+}
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--dsw-alias-label-primary);
+}
+
+.toggleLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.toggle {
+  accent-color: var(--dsw-alias-state-business-primary);
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+/* Voiceprint enrollment trigger button */
+.menuActionBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--dsw-alias-bg-module-platform);
+  border: 0.5px solid var(--dsw-alias-border-l1);
+  border-radius: 8px;
+  color: var(--dsw-alias-label-primary);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 7px 10px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.menuActionBtn:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  border-color: var(--dsw-alias-border-l2);
+}
+
+.actionIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--dsw-alias-label-secondary);
+}
+
+/* Gateway URL configuration section */
+.gatewayUrlSection {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background: var(--dsw-alias-bg-module-platform);
+  border: 0.5px solid var(--dsw-alias-border-l1);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.urlLabelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+}
+
+.urlTitle {
+  font-weight: 500;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+.urlEditBtn {
+  background: none;
+  border: none;
+  color: var(--dsw-alias-state-business-primary);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.urlEditBtn:hover {
+  text-decoration: underline;
+}
+
+.urlDisplay {
+  font-size: 11px;
+  font-family: var(--dsw-font-mono, monospace);
+  color: var(--dsw-alias-label-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.urlInputRow {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.urlInput {
+  flex: 1;
+  background: var(--dsw-specific-input-major);
+  border: 0.5px solid var(--dsw-alias-border-l2);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-family: var(--dsw-font-mono, monospace);
+  color: var(--dsw-alias-label-primary);
+  outline: none;
+}
+
+.urlInput:focus {
+  border-color: var(--dsw-alias-state-business-primary);
+}
+
+.urlSaveBtn {
+  background: var(--dsw-alias-button-info-fill);
+  border: none;
+  border-radius: 6px;
+  color: var(--dsw-alias-label-primary-foreground) !important;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.urlSaveBtn:hover {
+  background: var(--dsw-alias-button-info-hover);
+  color: var(--dsw-alias-label-primary-foreground) !important;
+}
+
+@keyframes listeningPulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--dsw-alias-state-success-primary) 40%, transparent); }
+  50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--dsw-alias-state-success-primary) 0%, transparent); }
+}
+
+@keyframes thinkingPulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--dsw-alias-state-warn-label) 40%, transparent); }
+  50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--dsw-alias-state-warn-label) 0%, transparent); }
+}
+
+@keyframes generatingPulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--dsw-alias-state-brand-primary) 45%, transparent); }
+  50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--dsw-alias-state-brand-primary) 0%, transparent); }
+}
+
+@keyframes speakingPulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--dsw-alias-state-business-primary) 40%, transparent); }
+  50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--dsw-alias-state-business-primary) 0%, transparent); }
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: translateY(4px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
