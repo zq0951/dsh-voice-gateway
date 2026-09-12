@@ -5,6 +5,9 @@
   display: inline-flex;
   align-items: center;
   flex: none;
+  /* Component-scoped accent color: DSH palette has no purple,
+   * pinned to this component variable following StateDot pattern. */
+  --dsh-voice-generating: #a855f7;
 }
 
 /* Button size 28px × 28px, strictly matching adjacent ModelSelect and toolbar */
@@ -59,11 +62,11 @@
   animation: thinkingPulse 1.6s infinite ease-in-out;
 }
 
-/* State: generating (TTS synthesis in progress) */
+/* State: generating (TTS synthesis in progress - purple breathing status) */
 .stateGenerating {
-  color: var(--dsw-alias-state-brand-primary);
-  background: var(--dsw-alias-interactive-bg-hover);
-  box-shadow: 0 0 0 1px var(--dsw-alias-state-brand-primary);
+  color: var(--dsh-voice-generating);
+  background: color-mix(in srgb, var(--dsh-voice-generating) 12%, transparent);
+  box-shadow: 0 0 0 1px var(--dsh-voice-generating);
   animation: generatingPulse 1.5s infinite ease-in-out;
 }
 
@@ -104,8 +107,8 @@
 }
 
 .badgeGenerating {
-  background: var(--dsw-alias-state-brand-primary);
-  box-shadow: 0 0 4px var(--dsw-alias-state-brand-primary);
+  background: var(--dsh-voice-generating);
+  box-shadow: 0 0 5px var(--dsh-voice-generating);
 }
 
 .badgeSpeaking {
@@ -161,34 +164,31 @@
   flex-shrink: 0;
 }
 
-.statusIndicator.stateIdle .statusDot {
+.dotIdle {
   background: var(--dsw-alias-label-secondary);
 }
 
-.statusIndicator.stateListening .statusDot {
+.dotListening {
   background: var(--dsw-alias-state-success-primary);
   box-shadow: 0 0 6px var(--dsw-alias-state-success-primary);
 }
 
-.statusIndicator.stateThinking .statusDot,
 .dotThinking {
   background: var(--dsw-alias-state-warn-label);
   box-shadow: 0 0 6px var(--dsw-alias-state-warn-label);
 }
 
-.statusIndicator.stateGenerating .statusDot,
 .dotGenerating {
-  background: var(--dsw-alias-state-brand-primary);
-  box-shadow: 0 0 6px var(--dsw-alias-state-brand-primary);
+  background: var(--dsh-voice-generating);
+  box-shadow: 0 0 6px var(--dsh-voice-generating);
 }
 
-.statusIndicator.stateSpeaking .statusDot,
 .dotSpeaking {
   background: var(--dsw-alias-state-business-primary);
   box-shadow: 0 0 6px var(--dsw-alias-state-business-primary);
 }
 
-.statusIndicator.stateDisconnected .statusDot {
+.dotDisconnected {
   background: var(--dsw-alias-label-dimmed);
 }
 
@@ -443,8 +443,8 @@
 }
 
 @keyframes generatingPulse {
-  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--dsw-alias-state-brand-primary) 45%, transparent); }
-  50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--dsw-alias-state-brand-primary) 0%, transparent); }
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--dsh-voice-generating) 45%, transparent); }
+  50%      { box-shadow: 0 0 0 5px color-mix(in srgb, var(--dsh-voice-generating) 0%, transparent); }
 }
 
 @keyframes speakingPulse {
