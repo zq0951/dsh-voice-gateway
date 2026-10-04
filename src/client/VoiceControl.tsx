@@ -1,10 +1,26 @@
 import { useState, useEffect, useRef } from 'react'
+import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import { VoiceprintModal } from './VoiceprintModal.tsx'
-import type { VoiceControlInjected, VoiceGatewayState, PropsRuntime, PropsLocale, InjectFace } from './slots.ts'
+import type {
+  VoiceControlInjected,
+  VoiceGatewayState,
+  PropsRuntime,
+  PropsLocale,
+  InjectFace,
+  ComposerInputActions,
+} from './slots.ts'
 import type { VoiceSnapshot } from './voice-service.ts'
 import css from './VoiceControl.module.css'
 
-export interface VoiceControlProps extends PropsRuntime<'conversation.input.right'>, PropsLocale<'voice'>, InjectFace<VoiceControlInjected> {}
+export interface VoiceControlProps
+  extends PropsRuntime<'conversation.input.right'>,
+    PropsLocale<'voice'>,
+    InjectFace<VoiceControlInjected> {
+  /** Standard Session-scope prop: the Session this composer belongs to. */
+  sessionId?: SessionId
+  /** Standard Session-scope prop: the composer's action face (draft + submit). */
+  inputActions?: ComposerInputActions
+}
 
 function MicIcon(props: { className?: string }) {
   return (
@@ -51,6 +67,9 @@ export function VoiceControl(props: VoiceControlProps) {
   const {
     t,
     useVoice,
+    voiceManager,
+    inputActions,
+    sessionId,
     setTriggerMode,
     setAutoSpeak,
     stopSpeaking,
@@ -84,6 +103,16 @@ export function VoiceControl(props: VoiceControlProps) {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [menuOpen])
+
+  // Bridge this composer to the voice manager: DSH mounts this cell only for
+  // the Session shown in the conversation panel, so handing over its
+  // `sessionId` + `inputActions` is what lets recognized speech be typed into
+  // the input box and submitted automatically.
+  useEffect(() => {
+    if (!voiceManager || !inputActions || sessionId === undefined) return
+    voiceManager.attachComposer(sessionId, inputActions)
+    return () => voiceManager.detachComposer(inputActions)
+  }, [voiceManager, inputActions, sessionId])
 
   const stateClass: Record<VoiceGatewayState, string | undefined> = {
     idle: css.stateIdle,

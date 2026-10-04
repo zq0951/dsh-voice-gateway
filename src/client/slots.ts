@@ -1,3 +1,4 @@
+import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { VoiceKey } from './locales.ts'
 import type { VoiceSnapshot } from './voice-service.ts'
 
@@ -87,6 +88,12 @@ export interface VoiceControlInjected {
   hooks: {
     voice: HostObservable<VoiceSnapshot>
   }
+  /**
+   * Raw manager instance, handed to the composer bridge. The renderer turns the
+   * `hooks` compartment into `useVoice`, which is a read-only selector face;
+   * the bridge needs the imperative object itself.
+   */
+  voiceManager: ComposerBridge
   setTriggerMode: (mode: string) => Promise<void>
   setAutoSpeak: (enabled: boolean) => Promise<void>
   stopSpeaking: () => Promise<void>
@@ -98,4 +105,28 @@ export interface VoiceControlInjected {
   recordEnrollStep: (sessionId: string) => Promise<RecordStepResult>
   finishEnroll: (sessionId: string) => Promise<FinishEnrollResult>
   abortEnroll: (sessionId: string) => Promise<void>
+}
+
+/** A caret-anchored insertion span handed out by the composer, guarded by draft revision. */
+export interface ComposerInsertionSpan {
+  start: number
+  end: number
+  draftRev: number
+}
+
+/**
+ * The subset of the composer's standard `inputActions` prop this plugin drives.
+ * Supplied by `dsh-client-ui-conversation` to every Session-scoped slot cell.
+ */
+export interface ComposerInputActions {
+  captureInsertion(): ComposerInsertionSpan
+  insertText(text: string, span: ComposerInsertionSpan): boolean
+  setDraft(text: string): void
+  submit(): void
+}
+
+/** Composer (input box) bridge implemented by the voice manager. */
+export interface ComposerBridge {
+  attachComposer(sessionId: SessionId | undefined, actions: ComposerInputActions | undefined): void
+  detachComposer(actions: ComposerInputActions | undefined): void
 }

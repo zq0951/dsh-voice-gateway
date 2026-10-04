@@ -48,6 +48,7 @@ export function apply(ctx: ClientContext): void {
       hooks: {
         voice: voiceManager,
       },
+      voiceManager,
       setTriggerMode: (mode) => voiceManager.setTriggerMode(mode),
       setAutoSpeak: (enabled) => voiceManager.setAutoSpeak(enabled),
       stopSpeaking: () => voiceManager.stopSpeaking(),

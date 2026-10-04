@@ -71,11 +71,35 @@ declare module '@deepseek-ai/dsh-api-session-controller/client' {
     }
   }
 
+  /**
+   * One metadata row of the Client session list. Local retention counters live
+   * in `retainedBy`; `mainView` marks the Session rendered by the main
+   * conversation panel.
+   */
+  export interface SessionListRow {
+    id: SessionId
+    retainedBy?: Record<string, number | undefined>
+  }
+
+  /**
+   * The Client session-list snapshot.
+   *
+   * NOTE: this snapshot carries list metadata only — `ids`, `byId`, `phase`,
+   * `projectionsBySession`. It has NO `current` field; the displayed Session is
+   * the row whose `retainedBy.mainView` counter is positive.
+   */
+  export interface SessionListSnapshot {
+    ids: SessionId[]
+    byId: Record<string, SessionListRow>
+    phase?: string
+    projectionsBySession?: Record<string, unknown>
+  }
+
   declare module '@deepseek-ai/cordis' {
     interface Context {
       sessions?: {
         list?: {
-          getSnapshot(): { current?: SessionId }
+          getSnapshot(): SessionListSnapshot
           subscribe(listener: () => void): () => void
         }
         binding(sessionId: SessionId): SessionBinding | undefined

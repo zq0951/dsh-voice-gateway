@@ -3,6 +3,7 @@ import type { Context as ClientContext } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-api-session-controller/client'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type {
+  ComposerInputActions,
   HostObservable,
   VoiceGatewayState,
   VoiceGatewayStatus,
@@ -129,6 +130,11 @@ export class VoiceManager implements HostObservable<VoiceSnapshot> {
   private currentObservedSessionId: SessionId | null = null
   private spokenSeqs = new Map<SessionId, number>()
   public isAgentRunning = false
+
+  /** Session whose composer (input box) is currently mounted, if any. */
+  private composerSessionId: SessionId | null = null
+  /** Live `inputActions` face of that composer. */
+  private composerActions: ComposerInputActions | null = null
 
   public isListeningMode(mode: string = this.status.trigger_mode): boolean {
     return mode === 'voiceprint_passive' || mode === 'hybrid'
@@ -274,6 +280,90 @@ export class VoiceManager implements HostObservable<VoiceSnapshot> {
     }, 3000)
   }
 
+  /**
+   * Bind the live composer (input box) of the Session shown in the conversation
+   * panel. DSH mounts the `conversation.input.right` cell only for the active
+   * Session, so its standard `sessionId` / `inputActions` props are the
+   * authoritative answer to "where does recognized speech belong".
+   */
+  public attachComposer(sessionId: SessionId | undefined, actions: ComposerInputActions | undefined): void {
+    if (sessionId === undefined || actions === undefined || actions === null) return
+    this.composerSessionId = sessionId
+    this.composerActions = actions
+  }
+
+  /** Drop the composer binding when its cell unmounts or a newer cell takes over. */
+  public detachComposer(actions: ComposerInputActions | undefined): void {
+    if (this.composerActions !== actions) return
+    this.composerActions = null
+    this.composerSessionId = null
+  }
+
+  /**
+   * The Session currently rendered by the main conversation view.
+   *
+   * The Client session-list snapshot carries metadata only (`ids`, `byId`,
+   * `phase`) — it never had a `current` field — so the displayed Session is the
+   * row the main view still retains (`retainedBy.mainView > 0`), which is the
+   * same rule the shipped UI plugins apply.
+   */
+  private currentMainSessionId(): SessionId | undefined {
+    const list = this.ctx.sessions?.list?.getSnapshot()
+    if (!list?.byId) return undefined
+    const ids = Array.isArray(list.ids) && list.ids.length > 0 ? list.ids : Object.keys(list.byId)
+    for (const id of ids) {
+      const row = list.byId[id]
+      if (row && (row.retainedBy?.mainView ?? 0) > 0) return row.id ?? id
+    }
+    return undefined
+  }
+
+  /**
+   * Route one recognized utterance into DSH.
+   *
+   * Primary path: seed the composer draft and submit it, so the text lands in
+   * the input box and the turn starts exactly like a typed message. Fallback
+   * (no composer mounted, e.g. a non-conversation panel): inject the prompt
+   * straight into the active Session.
+   */
+  private async deliverRecognizedSpeech(speaker: string, text: string): Promise<void> {
+    const trimmed = text.trim()
+    if (!trimmed) return
+
+    const promptText = speaker && speaker !== 'authorized_user' && speaker !== 'unknown'
+      ? `[${speaker}] ${trimmed}`
+      : trimmed
+
+    const actions = this.composerActions
+    if (actions) {
+      try {
+        actions.setDraft(promptText)
+        actions.submit()
+        console.info('[VoiceManager] Voice prompt placed in the composer input box and submitted.')
+        return
+      } catch (err) {
+        console.error('[VoiceManager] Composer submission failed; falling back to a direct session prompt:', err)
+      }
+    }
+
+    const sessionId = this.composerSessionId ?? this.currentMainSessionId()
+    if (!sessionId) {
+      console.warn('[VoiceManager] No active Session to receive the voice prompt:', promptText)
+      return
+    }
+    const binding = this.ctx.sessions?.binding(sessionId)
+    if (!binding?.session) {
+      console.warn(`[VoiceManager] Session "${sessionId}" has no live binding; voice prompt dropped.`)
+      return
+    }
+    try {
+      await binding.session.prompt([{ type: 'text', text: promptText }], 'queue')
+      console.info('[VoiceManager] Voice prompt injected into the active Session prompt queue.')
+    } catch (err) {
+      console.error('[VoiceManager] Failed to inject voice prompt into session:', err)
+    }
+  }
+
   private async handleEvent(data: VoiceEvent) {
     if (this.isDisposed) return
 
@@ -288,11 +378,17 @@ export class VoiceManager implements HostObservable<VoiceSnapshot> {
           const speaker = data.speaker || 'unknown'
           const text = data.text || ''
 
-          // Filter guest or unregistered speakers when registered profiles exist
+          // Only the configured owner may drive the Agent. `authorized_user` is
+          // the gateway's wake-word identity and must survive even while
+          // voiceprint profiles exist; an unknown voice is rejected only once
+          // profiles are enrolled.
           const isEnrolled = this.status.registered_speakers.includes(speaker)
-          const isGuest = speaker === 'guest' || speaker === 'unknown' || (!isEnrolled && this.status.registered_speakers.length > 0)
+          const isTrustedIdentity = speaker === 'authorized_user' || speaker === 'owner' || speaker === 'master'
+          const isGuest = speaker === 'guest' || speaker === 'unknown'
+            || (!isEnrolled && !isTrustedIdentity && this.status.registered_speakers.length > 0)
 
           if (isGuest) {
+            console.info(`[VoiceManager] Ignored speech from "${speaker}" (not an enrolled speaker).`)
             this.state = this.isListeningMode() ? 'listening' : 'idle'
             this.notify()
             return
@@ -301,24 +397,7 @@ export class VoiceManager implements HostObservable<VoiceSnapshot> {
           this.state = 'thinking'
           this.notify()
 
-          // Inject recognized voice prompt into current active session
-          if (text.trim()) {
-            const currentSessionId = this.ctx.sessions?.list?.getSnapshot()?.current
-            if (currentSessionId) {
-              const binding = this.ctx.sessions?.binding(currentSessionId)
-              if (binding?.session) {
-                const promptText = (speaker && speaker !== 'authorized_user' && speaker !== 'unknown')
-                  ? `[${speaker}] ${text.trim()}`
-                  : text.trim()
-
-                try {
-                  await binding.session.prompt([{ type: 'text', text: promptText }], 'queue')
-                } catch (err) {
-                  console.error('[VoiceManager] Failed to inject voice prompt into session:', err)
-                }
-              }
-            }
-          }
+          await this.deliverRecognizedSpeech(speaker, text)
         }
         break
 
@@ -380,7 +459,7 @@ export class VoiceManager implements HostObservable<VoiceSnapshot> {
    * finished assistant messages without fragile chat-view DOM/state crawling.
    */
   private setupAutoSpeakListener() {
-    const attachSession = (sessionId: SessionId | undefined) => {
+    const attachSession = (sessionId: SessionId | null) => {
       if (this.disposeEventSourceSubscription) {
         this.disposeEventSourceSubscription()
         this.disposeEventSourceSubscription = null
@@ -393,7 +472,7 @@ export class VoiceManager implements HostObservable<VoiceSnapshot> {
       // Immediately interrupt any active playback or generation when switching sessions
       void this.stopSpeaking()
 
-      this.currentObservedSessionId = sessionId ?? null
+      this.currentObservedSessionId = sessionId
       if (!sessionId || !this.ctx.sessions) return
 
       const binding = this.ctx.sessions.binding(sessionId)
@@ -504,10 +583,11 @@ export class VoiceManager implements HostObservable<VoiceSnapshot> {
       })
     }
 
-    if (this.ctx.sessions?.list) {
-      attachSession(this.ctx.sessions.list.getSnapshot().current)
-      this.disposeSessionListSubscription = this.ctx.sessions.list.subscribe(() => {
-        const activeId = this.ctx.sessions?.list?.getSnapshot().current
+    const list = this.ctx.sessions?.list
+    if (list) {
+      attachSession(this.currentMainSessionId() ?? null)
+      this.disposeSessionListSubscription = list.subscribe(() => {
+        const activeId = this.currentMainSessionId() ?? null
         if (activeId !== this.currentObservedSessionId) {
           attachSession(activeId)
         }

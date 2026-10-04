@@ -122,7 +122,16 @@
   bottom: calc(100% + 8px);
   right: 0;
   width: 284px;
-  background: var(--dsw-specific-menu);
+  /* Opaque DSH surface FIRST, then the DSH menu tint on top.
+   * `--dsw-specific-menu` is itself only ~58% opaque in light mode and ~45% in
+   * dark mode (`#f8f9fa94` / `#43454a73`); it is designed to sit over the 40px
+   * `--dsw-menu-backdrop-filter` blur. This popover is nested inside the frosted
+   * composer, where that backdrop blur cannot fully cover the page behind it, so
+   * page text used to read straight through the panel. Compositing the tint over
+   * an opaque layer keeps the native glass look while making the panel
+   * completely opaque. */
+  background-color: var(--dsw-alias-bg-layer-2);
+  background-image: linear-gradient(var(--dsw-specific-menu), var(--dsw-specific-menu));
   --dsw-elevation-stroke-color: var(--dsw-alias-border-l1);
   border-radius: 16px;
   box-shadow: var(--dsw-elevation-prominent);
@@ -133,8 +142,9 @@
   gap: 10px;
   font-size: 13px;
   color: var(--dsw-alias-label-primary);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  /* Official menu backdrop recipe; never hardcode a weaker blur here. */
+  backdrop-filter: var(--dsw-menu-backdrop-filter);
+  -webkit-backdrop-filter: var(--dsw-menu-backdrop-filter);
   animation: popIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 

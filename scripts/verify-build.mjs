@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process'
 import { existsSync, statSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 const requiredFiles = [
   'lib/index.js',
@@ -29,7 +30,9 @@ for (const file of requiredFiles) {
 
 // 2. Verify node stub importability
 try {
-  const nodeModule = await import(resolve(process.cwd(), 'lib/index.js'))
+  // Absolute Windows paths must go through pathToFileURL: the ESM loader rejects
+  // a bare "E:\..." specifier with ERR_UNSUPPORTED_ESM_URL_SCHEME.
+  const nodeModule = await import(pathToFileURL(resolve(process.cwd(), 'lib/index.js')).href)
   if (typeof nodeModule.apply !== 'function') {
     console.error('[error] lib/index.js does not export apply function')
     process.exit(1)
@@ -43,7 +46,17 @@ try {
 // 3. Verify tarball inclusion via npm pack --dry-run --json
 console.log('[check] Verifying tarball package manifest (files whitelist)...')
 try {
-  const rawPackJson = execFileSync('npm', ['pack', '--dry-run', '--json'], {
+  // On Windows `npm` is a .cmd shim that execFileSync cannot spawn directly, so
+  // prefer the npm CLI entry point that npm itself exports while running scripts.
+  const npmCli = process.env.npm_execpath
+  const file = npmCli ? process.execPath : (process.platform === 'win32' ? 'npm.cmd' : 'npm')
+  const args = [
+    ...(npmCli ? [npmCli] : []),
+    'pack',
+    '--dry-run',
+    '--json',
+  ]
+  const rawPackJson = execFileSync(file, args, {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
   })
